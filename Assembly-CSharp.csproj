@@ -54,7 +54,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\OneWheelController.cs" />
-    <Compile Include="Assets\TiltController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
