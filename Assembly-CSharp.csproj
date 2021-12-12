@@ -53,7 +53,8 @@
     <UnityVersion>2020.3.19f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Assets\OneWheelController.cs" />
+    <Compile Include="Assets\Scripts\OneWheelController.cs" />
+    <Compile Include="Assets\Scripts\OneWheelAgent.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
