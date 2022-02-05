@@ -14,8 +14,9 @@ public class OneWheelController : MonoBehaviour
     [Tooltip("XYZ wheel scale range")] [Range(0.8f, 1f)] public float rbWheel_scale_min; // .9
     [Tooltip("XYZ wheel scale range")] [Range(1f, 1.5f)] public float rbWheel_scale_max; // 1.4
     
-    // Regulates max rotational speed of agent
-    [Tooltip("Max angular velocity")] [Range(50, 100)] public float ang_vel_max; // 75
+    // Regulates max revolutions per minute of wheel
+    [Tooltip("Max rpm")] [Range(0, 10000)] public float rpm_max; //5000
+
     
     // Regulates torque of motor
     [Tooltip("Min gain for motor torque control")] [Range(75, 100)] public float motor_torque_gain_min; // 100
@@ -60,7 +61,12 @@ public class OneWheelController : MonoBehaviour
         OneWheel.motorTorqueGainRange = new Tuple<float, float>(motor_torque_gain_min, motor_torque_gain_max);
         OneWheel.frameTorqueGainRange = new Tuple<float, float>(frame_torque_gain_min, frame_torque_gain_max);
         OneWheel.wheelScaleRange = new Tuple<float, float>(rbWheel_scale_min, rbWheel_scale_max);
-        OneWheel.comYAxisRange = new Tuple<float, float>
+        OneWheel.comYAxisRange = new Tuple<float, float>(com_y_min, com_y_max);
+        OneWheel.comZAxisRange = new Tuple<float, float>(com_z_min, com_z_max);
+        OneWheel.rpmMax = rpm_max;
+        OneWheel.riderMassRange = new Tuple<int, int>(rider_mass_min, rider_mass_max);
+        
+
         OneWheel.Reset();
 
     }

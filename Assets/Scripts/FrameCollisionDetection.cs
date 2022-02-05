@@ -15,10 +15,9 @@ public class FrameCollisionDetection : MonoBehaviour
         controller = OneWheelContainer.GetComponent<OneWheelController>();
     }
 
-
     void OnCollisionEnter(Collision hit)
     {
         Debug.Log("Collision Detected");
-        controller.reset_agent();
+        controller.OneWheel.reset();
     }
 }

@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 /*************************************************************************************
 *   Class: SBVehicle
 *   - Class to represent a Self Balancing Vehicle and simualted rider in Unity
+*   - Tuple properties are <min, max> format
 *************************************************************************************/
 public class SBVehicle // Self balancing vehicle class
 {
@@ -41,7 +40,7 @@ public class SBVehicle // Self balancing vehicle class
     private float comZAxis;
 
     /*************************************************************************************
-    *   Class Constructor: SBVehicle 
+    *   Constructor: SBVehicle 
     *   - Initializes variables and records birth state
     *************************************************************************************/
     public SBVehicle(Rigidbody w, Rigidbody f)
@@ -50,7 +49,7 @@ public class SBVehicle // Self balancing vehicle class
         frame = f;
         wheel.maxAngularVelocity = 100; // Hard code to 100
 
-        // Save initial state
+        // Save initial vehicle state
         wheelPosStart = wheel.position;
         wheelRotStart = wheel.rotation;
         framePosStart = frame.position;
@@ -69,6 +68,7 @@ public class SBVehicle // Self balancing vehicle class
         // 1. Motor physics control
         float motorTorque = motorTorqueGain * Input.GetAxis("Horizontal");
         wheel.AddTorque(motorTorque, 0, 0);
+
         // 2. Frame physics control
         int forward = Input.GetKey("f") ? 1 : 0;
         int backward = Input.GetKey("b") ? 1 : 0;
@@ -82,6 +82,7 @@ public class SBVehicle // Self balancing vehicle class
             frame.centerOfMass = new Vector3(0, frame.centerOfMass.y, frame.centerOfMass.z + com_tilt);
         }
         // TODO: Add simualted rider movement for training (sin, cos, tan, log, ln)
+
         // 3. Parralelness Observation
         int layerMask = 1 << floorLayerNum; // Only collide with floor
         RaycastHit frontRayHit;
@@ -106,6 +107,7 @@ public class SBVehicle // Self balancing vehicle class
         Ray backRay = new Ray(frame.transform.position - frame.transform.forward * .3f, -frame.transform.up);
         Debug.DrawRay(frontRay.origin, frontRay.direction * frontClearance, Color.red);
         Debug.DrawRay(backRay.origin, backRay.direction * rearClearance, Color.red);
+
         // 4. Wheel acceleration calc
         acceleration = (wheel.velocity.z - lastVelocity) / Time.deltaTime;
         lastVelocity = wheel.velocity.z;
@@ -118,17 +120,17 @@ public class SBVehicle // Self balancing vehicle class
     *   - Resets vehicle state
     *   - int flag: (1) Same as init start params, (0/Default) Randomize Start Params
     *************************************************************************************/
-    public void Reset(int flag=1)
+    public void Reset(int flag=0)
     {
+        // Reset vehicle to pos, rot, vel
+        wheel.position = wheelPosStart;
+        wheel.rotation = wheelRotStart;
+        frame.position = framePosStart;
+        frame.rotation = frameRotStart;
+        lastVelocity = 0;
+        
         if (flag == 0)
         {
-            // Reset vehicle to starting state
-            wheel.position = wheelPosStart;
-            wheel.rotation = wheelRotStart;
-            frame.position = framePosStart;
-            frame.rotation = frameRotStart;
-            lastVelocity = 0;
-
             // OneWheel properties
             motorTorqueGain = UnityEngine.Random.Range(motorTorqueGainRange.Item1, motorTorqueGainRange.Item2); // Randomize motor stength, simulates motor stength differences
             wheel.transform.localScale = wheelScaleStart * UnityEngine.Random.Range(wheelScaleRange.Item1, wheelScaleRange.Item2); // Randomize wheel scale: Simulates different tire sizes
@@ -142,12 +144,13 @@ public class SBVehicle // Self balancing vehicle class
         }
         else if (flag == 1)
         {
-
+            
         }
         else
         {
             Debug.LogException(new Exception("SBVehicle>Reset() - Flag argument invalid"));
         }
+
         Update();
     }
 }
