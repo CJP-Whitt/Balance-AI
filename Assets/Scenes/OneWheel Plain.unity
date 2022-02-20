@@ -487,7 +487,7 @@ GameObject:
   - component: {fileID: 1877604424}
   - component: {fileID: 1877604426}
   - component: {fileID: 1877604425}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Frame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -568,7 +568,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1877604421}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 40a9aa142246d9740956e56b122d5e28, type: 3}
   m_Name: 
@@ -651,13 +651,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rbWheel: {fileID: 1390808421}
-  rbWheel_scale_min: 0.8
-  rbWheel_scale_max: 1.5
-  ang_vel_max: 75
+  rbWheel_scale_min: 1
+  rbWheel_scale_max: 1
   motor_torque_gain_min: 100
   motor_torque_gain_max: 200
   rbFrame: {fileID: 1877604423}
-  frameCollider: {fileID: 0}
+  frameCollider: {fileID: 1877604426}
   com_y_min: 0.5
   com_y_max: 2
   com_z_min: -0.25

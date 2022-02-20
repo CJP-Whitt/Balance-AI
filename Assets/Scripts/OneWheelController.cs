@@ -15,7 +15,7 @@ public class OneWheelController : MonoBehaviour
     [Tooltip("XYZ wheel scale range")] [Range(1f, 1.5f)] public float rbWheel_scale_max; // 1.4
     
     // Regulates max revolutions per minute of wheel
-    [Tooltip("Max rpm")] [Range(0, 10000)] public float rpm_max; //5000
+    //[Tooltip("Max rpm")] [Range(0, 10000)] public float rpm_max; //5000
 
     
     // Regulates torque of motor
@@ -50,7 +50,7 @@ public class OneWheelController : MonoBehaviour
 
 
     // Agent state global tool vars
-    SBVehicle OneWheel;
+    private SBVehicle OneWheel;
 
 
     // Start is called before the first frame update
@@ -63,12 +63,10 @@ public class OneWheelController : MonoBehaviour
         OneWheel.wheelScaleRange = new Tuple<float, float>(rbWheel_scale_min, rbWheel_scale_max);
         OneWheel.comYAxisRange = new Tuple<float, float>(com_y_min, com_y_max);
         OneWheel.comZAxisRange = new Tuple<float, float>(com_z_min, com_z_max);
-        OneWheel.rpmMax = rpm_max;
         OneWheel.riderMassRange = new Tuple<int, int>(rider_mass_min, rider_mass_max);
+        OneWheel.floorLayerNum = 6;
         
-
-        OneWheel.Reset();
-
+        //OneWheel.Reset();
     }
 
     // Update is called once per physics frame
@@ -80,17 +78,7 @@ public class OneWheelController : MonoBehaviour
     private void OnGUI()
     {   
         // Screen readouts
-        GUILayout.Label("WHEEL: \n" + 
-                        "Velocity: " + Math.Round(rbWheel.velocity.z * 3600/1000, 2)  + "km/h\n" +
-                        "Acceleration: " + Math.Round(acceleration, 2) + "m/s^2\n" +
-                        "RPM: " + Math.Round(rbWheel.angularVelocity.x * 60 /(2 * Mathf.PI), 2) + "rpm\n" +
-                        "FRAME: \n" +
-                        "Pitch: " + Math.Round(rbFrame.rotation.x * 180f, 3) + "deg\n" +
-                        "FrontDist: " + Math.Round(frontHitDist, 3) + "m\n" +
-                        "BackDist: " + Math.Round(backHitDist, 3) + "m\n" +
-                        "COM Y Offset: " + Math.Round(rbFrame.centerOfMass.y, 2) + "m\n" +
-                        "COM Z Offset: " + Math.Round(rbFrame.centerOfMass.z, 2) + "m\n"
-            );
+        GUILayout.Label(OneWheel.StateLog());
     }
 
     private void OnDrawGizmos()
@@ -99,6 +87,11 @@ public class OneWheelController : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(rbFrame.transform.position + rbFrame.transform.rotation * rbFrame.centerOfMass, 0.1f);
         }
+    }
+
+    public void Reset()
+    {
+        OneWheel.Reset();
     }
 
 }

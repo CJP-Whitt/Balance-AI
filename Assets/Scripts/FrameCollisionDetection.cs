@@ -18,6 +18,6 @@ public class FrameCollisionDetection : MonoBehaviour
     void OnCollisionEnter(Collision hit)
     {
         Debug.Log("Collision Detected");
-        controller.OneWheel.reset();
+        //controller.Reset();
     }
 }

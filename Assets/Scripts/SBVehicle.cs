@@ -8,22 +8,27 @@ using UnityEngine;
 *   - Class to represent a Self Balancing Vehicle and simualted rider in Unity
 *   - Tuple properties are <min, max> format
 *************************************************************************************/
-public class SBVehicle // Self balancing vehicle class
+public class SBVehicle : ScriptableObject// Self balancing vehicle class
 {
-    public Tuple<float, float> motorTorqueGainRange { get;  set; }
+    public Tuple<float, float> motorTorqueGainRange { get; set; }
     public Tuple<float, float> frameTorqueGainRange { get;  set; }
     public Tuple<float, float> wheelScaleRange;
     //public Tuple<float, float> comXAxisRange;
-    public Tuple<float, float> comYAxisRange;
-    public Tuple<float, float> comZAxisRange;
-    public float frontClearance { get; set; }
-    public float rearClearance { get; set; } 
-    public int rpmMax { get; set; }
-    public float acceleration { get; set; }
-    public float velocity { get; set; }
-    public float lastVelocity { get; set; }
+    public Tuple<float, float> comYAxisRange { get; set; }
+    public Tuple<float, float> comZAxisRange { get; set; }
     public Tuple<int, int> riderMassRange { get; set; }
+
+    public float frontClearance { get; private set; }
+    public float rearClearance { get; private set; } 
+    //public int rpmMax { get; set; }
+    public float acceleration { get; private set; }
+    public float velocity { get; private set; }
+    public float lastVelocity { get; private set; }
     public int floorLayerNum { get; set; }
+    public float comXAxis { get; private set; }
+    public float comYAxis { get; private set; }
+    public float comZAxis { get; private set; }
+    public double rpm { get; private set; }
 
     private Rigidbody wheel;
     private Rigidbody frame;
@@ -35,9 +40,7 @@ public class SBVehicle // Self balancing vehicle class
     private Quaternion frameRotStart;
     private float motorTorqueGain;
     private float frameTorqueGain;
-    private float comXAxis;
-    private float comYAxis;
-    private float comZAxis;
+
 
     /*************************************************************************************
     *   Constructor: SBVehicle 
@@ -64,55 +67,62 @@ public class SBVehicle // Self balancing vehicle class
     *************************************************************************************/
     public void Update() // Update vehicle 
     {
+        try
+        {
+            // 1. Motor physics control
+            float motorTorque = motorTorqueGain * Input.GetAxis("Horizontal");
+            wheel.AddTorque(motorTorque + 1, 0, 0);
+            Debug.Log("Motor Torque: " + motorTorque);
 
-        // 1. Motor physics control
-        float motorTorque = motorTorqueGain * Input.GetAxis("Horizontal");
-        wheel.AddTorque(motorTorque, 0, 0);
+            // 2. Frame physics control
+            int forward = Input.GetKey("f") ? 1 : 0;
+            int backward = Input.GetKey("b") ? 1 : 0;
+            float com_tilt = frameTorqueGain * (forward - backward);
+            if (com_tilt > 0 && frame.centerOfMass.z < comZAxisRange.Item1)
+            {
+                frame.centerOfMass = new Vector3(0, frame.centerOfMass.y, frame.centerOfMass.z + com_tilt);
+            }
+            if (com_tilt < 0 && frame.centerOfMass.z > comZAxisRange.Item2)
+            {
+                frame.centerOfMass = new Vector3(0, frame.centerOfMass.y, frame.centerOfMass.z + com_tilt);
+            }
+            // TODO: Add simualted rider movement for training (sin, cos, tan, log, ln)
 
-        // 2. Frame physics control
-        int forward = Input.GetKey("f") ? 1 : 0;
-        int backward = Input.GetKey("b") ? 1 : 0;
-        float com_tilt = frameTorqueGain * (forward - backward);
-        if (com_tilt > 0 && frame.centerOfMass.z < comZAxisRange.Item1)
-        {
-            frame.centerOfMass = new Vector3(0, frame.centerOfMass.y, frame.centerOfMass.z + com_tilt);
-        }
-        if (com_tilt < 0 && frame.centerOfMass.z > comZAxisRange.Item2)
-        {
-            frame.centerOfMass = new Vector3(0, frame.centerOfMass.y, frame.centerOfMass.z + com_tilt);
-        }
-        // TODO: Add simualted rider movement for training (sin, cos, tan, log, ln)
+            // 3. Parralelness Observation
+            int layerMask = 1 << floorLayerNum; // Only collide with floor
+            RaycastHit frontRayHit;
+            RaycastHit backRayHit;
+            if (Physics.Raycast(frame.transform.position + frame.transform.forward * .3f, -frame.transform.up, out frontRayHit, maxDistance: 1f, layerMask: layerMask))
+            {
+                frontClearance = frontRayHit.distance;
+            }
+            else
+            {
+                frontClearance = 2.5f;
+            }
+            if (Physics.Raycast(frame.transform.position - frame.transform.forward * .3f, -frame.transform.up, out backRayHit, maxDistance: 1f, layerMask: layerMask))
+            {
+                rearClearance = backRayHit.distance;
+            }
+            else
+            {
+                rearClearance = 2.5f;
+            }
+            Ray frontRay = new Ray(frame.transform.position + frame.transform.forward * .3f, -frame.transform.up);
+            Ray backRay = new Ray(frame.transform.position - frame.transform.forward * .3f, -frame.transform.up);
+            Debug.DrawRay(frontRay.origin, frontRay.direction * frontClearance, Color.red);
+            Debug.DrawRay(backRay.origin, backRay.direction * rearClearance, Color.red);
 
-        // 3. Parralelness Observation
-        int layerMask = 1 << floorLayerNum; // Only collide with floor
-        RaycastHit frontRayHit;
-        RaycastHit backRayHit;
-        if (Physics.Raycast(frame.transform.position + frame.transform.forward * .3f, -frame.transform.up, out frontRayHit, maxDistance: 1f, layerMask: layerMask))
-        {
-            frontClearance = frontRayHit.distance;
+            // 4. Wheel acceleration/rpm calc
+            acceleration = (wheel.velocity.z - lastVelocity) / Time.deltaTime;
+            lastVelocity = wheel.velocity.z;
+            velocity = wheel.velocity.z;
+            rpm = Math.Round(wheel.angularVelocity.x * 60 / (2 * Mathf.PI), 2);
         }
-        else
+        catch
         {
-            frontClearance = 2.5f;
+            Debug.Log("OneWheel Update Error");
         }
-        if (Physics.Raycast(frame.transform.position - frame.transform.forward * .3f, -frame.transform.up, out backRayHit, maxDistance: 1f, layerMask: layerMask))
-        {
-            rearClearance = backRayHit.distance;
-        }
-        else
-        {
-            rearClearance = 2.5f;
-        }
-        Ray frontRay = new Ray(frame.transform.position + frame.transform.forward * .3f, -frame.transform.up);
-        Ray backRay = new Ray(frame.transform.position - frame.transform.forward * .3f, -frame.transform.up);
-        Debug.DrawRay(frontRay.origin, frontRay.direction * frontClearance, Color.red);
-        Debug.DrawRay(backRay.origin, backRay.direction * rearClearance, Color.red);
-
-        // 4. Wheel acceleration calc
-        acceleration = (wheel.velocity.z - lastVelocity) / Time.deltaTime;
-        lastVelocity = wheel.velocity.z;
-        velocity = wheel.velocity.z;
-
     }
 
     /*************************************************************************************
@@ -152,5 +162,20 @@ public class SBVehicle // Self balancing vehicle class
         }
 
         Update();
+    }
+
+
+    public string StateLog()
+    {
+        return "WHEEL: \n" +
+                "Velocity: " + Math.Round(velocity * 3600 / 1000, 2) + "km/h\n" +
+                "Acceleration: " + Math.Round(acceleration, 2) + "m/s^2\n" +
+                "RPM: " + rpm + "rpm\n" +
+                "FRAME: \n" +
+                "Pitch: " + Math.Round(frame.rotation.x * 180f, 3) + "deg\n" +
+                "FrontDist: " + Math.Round(frontClearance, 3) + "m\n" +
+                "BackDist: " + Math.Round(rearClearance, 3) + "m\n" +
+                "COM Y Offset: " + Math.Round(comYAxis, 2) + "m\n" +
+                "COM Z Offset: " + Math.Round(comZAxis, 2) + "m\n";
     }
 }
